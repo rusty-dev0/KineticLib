@@ -39,3 +39,5 @@ add_subdirectory(libs/KineticLib)
 # Each project owns its executable and Pico-specific configuration.
 add_subdirectory(projects/Blinky)
 add_subdirectory(projects/MotorDrive)
+add_subdirectory(projects/HelloPi)
+add_subdirectory(projects/EncoderCalibration)
