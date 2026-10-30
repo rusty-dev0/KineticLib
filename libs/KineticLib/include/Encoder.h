@@ -12,6 +12,7 @@
 extern volatile int encoderPositionA;
 extern volatile int encoderPositionB;
 
-void handleEncoderUpdateA(uint gpio, uint32_t events);
-void handleEncoderUpdateB(uint gpio, uint32_t events);
+void handleEncoderUpdate();
+void handleEncoderUpdateA();
+void handleEncoderUpdateB();
 void initializeEncoders();

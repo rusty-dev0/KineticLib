@@ -3,7 +3,15 @@
 extern volatile int encoderPositionA = 0;
 extern volatile int encoderPositionB = 0;
 
-void handleEncoderUpdateA(uint gpio, uint32_t events) {
+void handleEncoderUpdate(uint gpio, uint32_t events) {
+    if (gpio == KL_A_ENCA) {
+        handleEncoderUpdateA();
+    } else if (gpio == KL_B_ENCA) {
+        handleEncoderUpdateB();
+    }
+}
+
+void handleEncoderUpdateA() {
     if (gpio_get(KL_A_ENCA) != gpio_get(KL_A_ENCB)) {
         encoderPositionA++;
     } else {
@@ -11,7 +19,7 @@ void handleEncoderUpdateA(uint gpio, uint32_t events) {
     }
 }
 
-void handleEncoderUpdateB(uint gpio, uint32_t events) {
+void handleEncoderUpdateB() {
     if (gpio_get(KL_B_ENCA) != gpio_get(KL_B_ENCB)) {
         encoderPositionB++;
     } else {
@@ -28,7 +36,7 @@ void initializeEncoders() {
         gpio_set_dir(encPins[i], GPIO_IN);
     }
 
-    gpio_set_irq_enabled_with_callback(KL_A_ENCA, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &handleEncoderUpdateA);
-    gpio_set_irq_enabled_with_callback(KL_B_ENCA, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &handleEncoderUpdateB);
+    gpio_set_irq_enabled_with_callback(KL_A_ENCA, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &handleEncoderUpdate);
+    gpio_set_irq_enabled(KL_B_ENCA, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
 
 }
