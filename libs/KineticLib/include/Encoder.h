@@ -26,3 +26,5 @@ int initializeEncoders();
 
 bool handleTimer(struct repeating_timer *t);
 void initializeRPM();
+
+void getRPMs(double *arr);

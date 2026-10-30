@@ -95,3 +95,14 @@ void initializeRPM() {
 
     add_repeating_timer_ms(-50, handleTimer, NULL, &timer);
 }
+
+void getRPMs(double *arr) {
+    // THIS CAN ONLY WORK IF THE ARRAY IS SIZE 2 OR GREATER
+    // USE WITH CAUTION!!
+    uint32_t irqState = save_and_disable_interrupts();
+
+    arr[0] = motorRPM_A;
+    arr[1] = motorRPM_B;
+    
+    restore_interrupts(irqState);
+}

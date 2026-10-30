@@ -1,10 +1,13 @@
 #include <stdio.h>
+#include <math.h>
+
 #include "pico/stdlib.h"
 #include "pico/cyw43_arch.h"
 
 #include "Direction.h"
 #include "Motor.h"
 #include "Encoder.h"
+#include "PID.h"
 
 void printSpeed() {
     printf("motor A is going at %lf RPM\nmotorB is going at %lf RPM\n", motorRPM_A, motorRPM_B);
@@ -44,6 +47,54 @@ int main() {
 
 
     double desired_speed = 45.0; //(RPM) change this later based on UART
+
+    // using pidControllers to ensure that the desired speed is actually reached
+
+    struct pidController pidA = {0}, pidB = {0};
+    initializePidController(&pidA, 0.0045, 0.001, 0.000001, 0.2, 1);
+    initializePidController(&pidB, 0.0045, 0.001, 0.000001, 0.2, 1);
+
+    uint64_t prevTime = time_us_64();
+    sleep_ms(50);
+
+    int breakFlagCounter = 0;
+
+    while (true) {
+        uint64_t currTime = time_us_64();
+        double deltaTime = (currTime - prevTime) / 1.0e6;
+        prevTime = currTime;
+
+        double motorRPMs[2];
+
+        getRPMs(motorRPMs);
+
+        motorRPMs[0] = fabs(motorRPMs[0]);
+        motorRPMs[1] = fabs(motorRPMs[1]);
+
+        double dutyA = updatePidController(&pidA, desired_speed, motorRPMs[0], deltaTime);
+        double dutyB = updatePidController(&pidB, desired_speed, motorRPMs[1], deltaTime);
+
+        pwmChannel_setDutyCycle(&pwmA, dutyA);
+        pwmChannel_setDutyCycle(&pwmB, dutyB);
+
+        printSpeed();
+        /*
+        if ((breakFlagCounter == 0) && ((desired_speed - ((motorRPMs[0] + motorRPMs[1]) / 2)) < 2)) {
+            breakFlagCounter = 1;
+        }
+
+        if (breakFlagCounter > 0) {
+            breakFlagCounter++;
+        }
+
+        if (breakFlagCounter > 20) break;
+        */
+
+        sleep_ms(150);
+    }
+
+
+    /*
     double calculated_speed = desired_speed / (double)MAX_SPEED; 
 
     // slowly reach desired speed
@@ -86,6 +137,8 @@ int main() {
         printSpeed();
         sleep_ms(400);
     }
+
+    */
 
     pwmChannel_halt(&pwmA);
     pwmChannel_halt(&pwmB);
