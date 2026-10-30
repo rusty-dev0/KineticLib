@@ -1,6 +1,7 @@
 add_library(KineticLib STATIC
     src/Motor.c
-    src/Encoder.c #in development
+    src/Encoder.c #unpolished
+    src/Direction.c #in development
 )
 
 target_include_directories(KineticLib PUBLIC
