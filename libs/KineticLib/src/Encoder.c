@@ -1,7 +1,16 @@
 #include "Encoder.h"
 
-extern volatile int encoderPositionA = 0;
-extern volatile int encoderPositionB = 0;
+volatile int encoderPositionA = 0;
+volatile int encoderPositionB = 0;
+
+volatile double motorRPM_A = 0;
+volatile double motorRPM_B = 0;
+
+volatile int previousPositionA = 0;
+volatile int previousPositionB = 0;
+volatile uint64_t previousTime = 0;
+
+bool encodersInitialized = false;
 
 void handleEncoderUpdate(uint gpio, uint32_t events) {
     if (gpio == KL_A_ENCA) {
@@ -27,7 +36,9 @@ void handleEncoderUpdateB() {
     }
 }
 
-void initializeEncoders() {
+int initializeEncoders() {
+
+    if (encodersInitialized) return -1;
 
     int encPins[4] = {KL_A_ENCA, KL_A_ENCB, KL_B_ENCA, KL_B_ENCB};
 
@@ -39,4 +50,48 @@ void initializeEncoders() {
     gpio_set_irq_enabled_with_callback(KL_A_ENCA, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &handleEncoderUpdate);
     gpio_set_irq_enabled(KL_B_ENCA, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
 
+}
+
+bool handleTimer(struct repeating_timer *t) {
+    uint64_t currentTime = time_us_64();
+
+    uint32_t irqState = save_and_disable_interrupts(); // freeze so both encoderPositions are sampled at the same moment in time
+    
+    int32_t currentEncoderPositionA = encoderPositionA;
+    int32_t currentEncoderPositionB = encoderPositionB;
+
+    restore_interrupts(irqState);
+
+    double displacementA = currentEncoderPositionA - previousPositionA;
+    double displacementB = currentEncoderPositionB - previousPositionB;
+    double deltaTime = currentTime - previousTime;
+
+    if (deltaTime > 0) {
+        motorRPM_A = (displacementA / COUNTS_PER_REV) * (6.0e7 / deltaTime);
+        motorRPM_B = (displacementB / COUNTS_PER_REV) * (6.0e7 / deltaTime);
+    }
+
+    previousPositionA = currentEncoderPositionA;
+    previousPositionB = currentEncoderPositionB;
+    previousTime = currentTime;
+
+    return true;
+}
+
+void initializeRPM() {
+
+    if (!encodersInitialized) initializeEncoders();
+
+    static struct repeating_timer timer;
+
+    uint32_t irqState = save_and_disable_interrupts();
+
+    previousPositionA = encoderPositionA;
+    previousPositionB = encoderPositionB;
+
+    restore_interrupts(irqState);
+
+    previousTime = time_us_64();
+
+    add_repeating_timer_ms(-50, handleTimer, NULL, &timer);
 }

@@ -1,7 +1,7 @@
 add_library(KineticLib STATIC
     src/Motor.c
     src/Encoder.c #unpolished
-    src/Direction.c #in development
+    src/Direction.c
 )
 
 target_include_directories(KineticLib PUBLIC
@@ -13,5 +13,6 @@ target_link_libraries(KineticLib PRIVATE
     pico_stdlib
     hardware_pwm
     hardware_gpio
-    hardware_irq
+    hardware_irq # havent actually used ts
+    hardware_sync
 )

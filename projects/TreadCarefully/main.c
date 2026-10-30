@@ -6,43 +6,19 @@
 #include "Motor.h"
 #include "Encoder.h"
 
-#define MAX_SPEED 100
-
-volatile double previousPositionA = 0;
-volatile double displacementA = 0;
-
-volatile double previousTime = 0;
-volatile double deltaTime = 0;
-
-bool handleTimer(struct repeating_timer *t) {
-    displacementA = encoderPositionA - previousPositionA;
-    deltaTime = time_us_64() - previousTime;
-    previousPositionA = encoderPositionA;
-    previousTime = time_us_64();
-
-    return true;
-}
-
-void beginFeedback() {
-    static struct repeating_timer timer;
-    add_repeating_timer_ms(-50, handleTimer, NULL, &timer);
-}
-
 void printSpeed() {
-    double speed = (displacementA / 720) / (deltaTime) * 6.0e7; // should be in RPM
-    printf("motor A is going at %lf RPM\n", speed);
+    printf("motor A is going at %lf RPM\nmotorB is going at %lf RPM\n", motorRPM_A, motorRPM_B);
 }
 
 int main() {
     stdio_init_all();
-    initializeEncoders();
 
     if (cyw43_arch_init()) {
         printf("WIFI FAILED. WIFI FAILED.\n");
         return -1;
     }
 
-    beginFeedback();
+    initializeRPM();
 
     sleep_ms(1000);
 
