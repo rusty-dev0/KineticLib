@@ -18,3 +18,4 @@ struct pidController {
 
 int initializePidController(struct pidController *pidControllerObject, double kp, double ki, double kd, double outputMin, double outputMax);
 double updatePidController(struct pidController *pidControllerObject, double setpoint, double measured, double deltaTime);
+int resetPidController(struct pidController *pidControllerObject);

@@ -36,3 +36,12 @@ double updatePidController(struct pidController *pidControllerObject, double set
 
     return output;
 }
+
+int resetPidController(struct pidController *pidControllerObject) {
+    if (!pidControllerObject->init) return -2;
+
+    pidControllerObject->integral = 0;
+    pidControllerObject->prevError = 0;
+    
+    return 0;
+}
